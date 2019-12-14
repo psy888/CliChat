@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class ReceiveThread implements Runnable {
+    private static final String DIVIDER = "|";
+    public static final String COMMAND_SERVER_INFO = "-server_info";
 
     BufferedReader bufferedReader;
 

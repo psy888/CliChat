@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class Main {
-    public final static String HOST = "192.168.0.103";
+    public final static String HOST = "172.30.2.178";
     public final static int PORT = 8778;
 
 
