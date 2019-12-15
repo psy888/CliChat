@@ -3,14 +3,17 @@ package com.psy888;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-public class ReceiveThread implements Runnable {
+public class ReceiveThread extends Thread {
     private static final String DIVIDER = "|";
     public static final String COMMAND_SERVER_INFO = "-server_info";
 
-    BufferedReader bufferedReader;
 
-    public ReceiveThread(BufferedReader bufferedReader) {
+    BufferedReader bufferedReader;
+    UIThread uiThread;
+
+    public ReceiveThread(BufferedReader bufferedReader, UIThread ui) {
         this.bufferedReader = bufferedReader;
+        this.uiThread = ui;
     }
 
     @Override
@@ -20,13 +23,18 @@ public class ReceiveThread implements Runnable {
 
                 String msg = bufferedReader.readLine();
                 if (msg == null) break;
-                System.out.println(msg);
+
+                if(msg.contains(COMMAND_SERVER_INFO)){
+                    uiThread.updateUsersList(getNames(msg));
+                    continue;
+                }
+
+                uiThread.addMsgToChat(msg);
 
             } while (true);
         } catch (IOException e) {
-            System.out.println("Связь с сервером потеряна.");
+            uiThread.addMsgToChat("ERROR: Связь с сервером потеряна.");
 
-//            e.printStackTrace();
         }finally {
             try {
                 bufferedReader.close();
@@ -36,5 +44,11 @@ public class ReceiveThread implements Runnable {
             }
             System.out.println("Входящий поток закрыт");
         }
+    }
+
+    private String[] getNames(String string){
+        string = string.substring(COMMAND_SERVER_INFO.length());
+        String[] names = string.split(DIVIDER);
+        return names;
     }
 }
