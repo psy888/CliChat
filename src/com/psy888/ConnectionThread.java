@@ -2,8 +2,9 @@ package com.psy888;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
-public class ConnectionThread extends Thread {
+public class ConnectionThread {
     private final static String ADDED = "ok";
     private final static String LOGIN = "-login";
     private final static String PRIVATE = "-p";
@@ -12,40 +13,20 @@ public class ConnectionThread extends Thread {
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private UIThread ui;
+    private UI ui;
     private String userName;
 
 
-    @Override
-    public void run() {
-        try {
-            socket = new Socket(HOST, PORT);
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-
-            while (true){
-
-            }
-
-        } catch (IOException io) {
-            io.printStackTrace();
-        }finally {
-            try {
-                bufferedWriter.close();
-                bufferedReader.close();
-                socket.close();
-            } catch (IOException e) {
-                System.out.println("Соединение разорвано, потоки закрыты");
-                e.printStackTrace();
-            }
-        }
-
+    public ConnectionThread() throws IOException {
+        socket = new Socket(HOST, PORT);
+        bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream() , "Cp1252"));
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
     }
 
 
     public void sendMsg(String msg) throws IOException {
         //todo send msg
-        bufferedWriter.write( msg + "\r");
+        bufferedWriter.write(msg + "\r");
         bufferedWriter.flush();
     }
 
@@ -56,23 +37,36 @@ public class ConnectionThread extends Thread {
         bufferedWriter.flush();
     }
 
-    public boolean sendLoginRequest(String name) throws IOException {
+    public String sendLoginRequest(String name) throws IOException {
         //todo if ok set name
         bufferedWriter.write(LOGIN + " " + name + "\r");
         bufferedWriter.flush();
         String srvRespond = bufferedReader.readLine();
-        if (srvRespond.contentEquals(ADDED)) {
+        if (srvRespond.contains(name)) {
             userName = name;
-            startReceiveThr(ui);
-            return true;
+
+            return srvRespond;
         }
-        return false;
+        return null;
     }
 
-    public void startReceiveThr(UIThread uiThread) {
-        ui = uiThread; // wtf
-        ReceiveThread rt = new ReceiveThread(bufferedReader, ui);
+    public void startReceiveThr(UI ui, String userList) {
+        this.ui = ui; // wtf
+        ReceiveThread rt = new ReceiveThread(bufferedReader, this.ui);
         rt.setDaemon(true);
         rt.start();
+        this.ui.updateUsersList(rt.getNames(userList));
+        ui.setTitle(userName);
+    }
+
+    public void closeConnection() {
+        try {
+            bufferedWriter.close();
+            bufferedReader.close();
+            socket.close();
+        } catch (IOException e) {
+            System.out.println("Соединение разорвано, потоки закрыты");
+            e.printStackTrace();
+        }
     }
 }

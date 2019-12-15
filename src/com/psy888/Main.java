@@ -1,8 +1,7 @@
 package com.psy888;
 
-import javax.swing.*;
 import java.io.*;
-import java.net.Socket;
+import java.nio.charset.Charset;
 
 public class Main {
 
@@ -11,14 +10,17 @@ public class Main {
     public final static int PORT = 8778;
 
 
-
     public static void main(String[] args) {
         // write your code here
 
-        ConnectionThread ct = new ConnectionThread();
-        ct.start();
-        UIThread ui = new UIThread(ct);
-        ui.start();
+        try {
+            ConnectionThread ct = new ConnectionThread();
+            UI ui = new UI(ct);
+            ui.login();
+            ui.setChatWindowVisible();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }

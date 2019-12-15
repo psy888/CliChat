@@ -11,12 +11,15 @@ public class Login extends JDialog {
     private JTextField nameTextField;
     private JLabel errorMsgField;
     private ConnectionThread connectionThread;
+    private UI ui;
 
-    public Login(ConnectionThread ct) {
+    public Login(ConnectionThread ct, UI ui) {
+        this.ui = ui;
         this.connectionThread = ct;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+        pack();
 
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -48,14 +51,15 @@ public class Login extends JDialog {
 
     private void onOK() {
         // add your code here
-            String name = nameTextField.getName();
-        boolean isOK = false;
+            String name = nameTextField.getText();
+        String userList = null;
         try {
-            isOK = connectionThread.sendLoginRequest(name);
+           userList = connectionThread.sendLoginRequest(name);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (isOK) {
+        if (userList!=null) {
+            connectionThread.startReceiveThr(ui,userList);
                 dispose();
             } else {
                 errorMsgField.setText("Имя уже занято");
